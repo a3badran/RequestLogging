@@ -13,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
  * record request data to log in JSON format
  */
 public class JsonLogWriter implements Writer {
-    private static final Log log = LogFactory.getLog("request");
+    private static final Log log = LogFactory.getLog(Writer.LOGGER);
 
     @Override
     public void write(RequestScope requestScope) {

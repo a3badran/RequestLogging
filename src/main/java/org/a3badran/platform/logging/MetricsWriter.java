@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MetricsWriter implements Writer {
 
-    private static final Log log = LogFactory.getLog("request");
+    private static final Log log = LogFactory.getLog(Writer.LOGGER);
 
     private static final Gson gson = new GsonBuilder()
                 .setPrettyPrinting()

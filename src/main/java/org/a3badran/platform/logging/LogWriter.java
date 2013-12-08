@@ -15,7 +15,7 @@ import com.google.common.base.Strings;
  * record request data to log
  */
 public class LogWriter implements Writer {
-    private static final Log log = LogFactory.getLog("request");
+    private static final Log log = LogFactory.getLog(Writer.LOGGER);
     private static final Object EOL = System.getProperty("line.separator");
 
     @Override

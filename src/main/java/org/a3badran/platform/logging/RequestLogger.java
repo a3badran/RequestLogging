@@ -22,7 +22,7 @@ import java.util.Collection;
  *
  */
 public class RequestLogger {
-    private static final Log log = LogFactory.getLog("profiler");
+    private static final Log log = LogFactory.getLog("request");
     private static final Object EOL = System.getProperty("line.separator");
     private static ThreadLocal<RequestScope> threadLocal = new ThreadLocal<RequestScope>();
     private static final Collection<Writer> writers = Sets.newHashSet((Writer) new LogWriter());

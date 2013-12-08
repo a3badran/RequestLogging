@@ -7,5 +7,6 @@ package org.a3badran.platform.logging;
  * Interface to write requests
  */
 public interface Writer {
+    public static final String LOGGER = "requestLogger";
     public void write(RequestScope requestScope);
 }
