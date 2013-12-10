@@ -53,7 +53,8 @@ public class LogRequestAspect extends LogAspect {
             for (Object arg : joinPoint.getArgs()) {
                 for (Annotation annotation : annotations[i]) {
                     if (annotation.annotationType() == LogParam.class) {
-                        RequestLogger.addInfo(((LogParam) annotation).value(), arg.toString());
+                        String string = arg == null ? "null" : arg.toString();
+                        RequestLogger.addInfo(((LogParam) annotation).value(), string);
                     }
                 }
                 i++;

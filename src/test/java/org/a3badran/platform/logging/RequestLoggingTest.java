@@ -62,12 +62,17 @@ public class RequestLoggingTest {
     public void logAllParam() {
         methods.logAllParam(0, "string", 0l);
     }
+    
+    @Test
+    public void logNullParam() {
+        methods.logAllParam(0, "string", null);
+    }
 
     @Test
     public void ignoreAllParam() {
         methods.ignoreAllParam(0, "", 0l);
     }
-    
+
     @Test
     public void logWarning() {
         try {
