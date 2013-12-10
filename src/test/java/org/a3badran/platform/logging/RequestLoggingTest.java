@@ -21,7 +21,7 @@ public class RequestLoggingTest {
 
     @Autowired
     private LogMethods methods2;
-    
+
     @Before
     public void setUp() {
         methods.setMethods2(methods2);
@@ -78,6 +78,11 @@ public class RequestLoggingTest {
         }
     }
     
+    @Test
+    public void logClass() {
+        methods.logClassCall();
+    }
+
     @Test
     public void logError() {
         try {

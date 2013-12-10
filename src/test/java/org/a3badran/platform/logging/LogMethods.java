@@ -3,11 +3,15 @@
  */
 package org.a3badran.platform.logging;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LogMethods {
     private LogMethods methods2;
+    
+    @Autowired
+    private LogClass logClass;
 
     @LogRequest("noParams")
     public void noParams() {
@@ -65,6 +69,11 @@ public class LogMethods {
         methods2.subScopes("id3", "id4");
     }
     
+    @LogRequest("logClassCall")
+    public void logClassCall() {
+        logClass.notAnnotatedMethod1();
+    }
+
     public void setMethods2(LogMethods methods2) {
         this.methods2 = methods2;
     }

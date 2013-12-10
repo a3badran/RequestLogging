@@ -14,8 +14,15 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class TestSpringConfig
 {
     @Bean
-    public LogAspect logAspect() {
-        LogAspect aspect = new LogAspect();
+    public LogRequestAspect logRequestAspect() {
+        LogRequestAspect aspect = new LogRequestAspect();
+        aspect.setRequestErrorHandler(new ErrorHandler());
+        return aspect;
+    }
+
+    @Bean
+    public LogClassAspect logClassAspect() {
+        LogClassAspect aspect = new LogClassAspect();
         aspect.setRequestErrorHandler(new ErrorHandler());
         return aspect;
     }

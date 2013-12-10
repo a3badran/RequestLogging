@@ -46,6 +46,8 @@ You could also use @LogParam annotation to include the values of some params int
 
   @LogRequest("getCustomerById")
   public Customer getCustomerById(@LogParam("customerId") String customerId)
+
+You could also annotate a class with @LogClassRequests to log all public methods in that class.
  
 Java Programing
 -------------------------------------------
