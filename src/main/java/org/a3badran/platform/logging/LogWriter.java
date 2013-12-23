@@ -29,11 +29,11 @@ public class LogWriter implements Writer {
             buffer.append("Time (ms): ").append(requestScope.getEndTime() - requestScope.getStartTime()).append(EOL);
             
             if (!Strings.isNullOrEmpty(requestScope.getError())) {
-                buffer.append("Error: ").append(requestScope.getError());
+                buffer.append("Error: ").append(requestScope.getError()).append(EOL);
             }
 
             if (!Strings.isNullOrEmpty(requestScope.getWarninge())) {
-                buffer.append("Warning: ").append(requestScope.getWarninge());
+                buffer.append("Warning: ").append(requestScope.getWarninge()).append(EOL);
             }
 
             // write all sub scopes
