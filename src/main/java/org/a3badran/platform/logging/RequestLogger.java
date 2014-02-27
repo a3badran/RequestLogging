@@ -8,6 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * RequestLogger is meant to help with logging consistent timing data
@@ -111,5 +112,9 @@ public class RequestLogger {
     public static void setWriters(Collection<Writer> writers) {
         RequestLogger.writers.clear();
         RequestLogger.writers.addAll(writers);
+    }
+
+    public static Collection<Writer> getWriters() {
+        return Collections.unmodifiableCollection(RequestLogger.writers);
     }
 }
