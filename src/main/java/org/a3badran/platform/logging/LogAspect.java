@@ -12,7 +12,7 @@ public abstract class LogAspect {
     //-------------------------------------------------------------
     // IoC
     //-------------------------------------------------------------
-    public void setRecorders(Collection<Writer> writers) {
+    public void setWriters(Collection<Writer> writers) {
         RequestLogger.setWriters(writers);
     }
 
