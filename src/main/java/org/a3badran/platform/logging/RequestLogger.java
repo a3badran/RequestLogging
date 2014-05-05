@@ -4,6 +4,8 @@
 package org.a3badran.platform.logging;
 
 import com.google.common.collect.Sets;
+import org.a3badran.platform.logging.writer.FileWriter;
+import org.a3badran.platform.logging.writer.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,7 +28,7 @@ public class RequestLogger {
     private static final Log log = LogFactory.getLog("request");
     private static final Object EOL = System.getProperty("line.separator");
     private static ThreadLocal<RequestScope> threadLocal = new ThreadLocal<RequestScope>();
-    private static final Collection<Writer> writers = Sets.newHashSet((Writer) new LogWriter());
+    private static final Collection<Writer> writers = Sets.newHashSet((Writer) new FileWriter());
 
     private RequestLogger() {
         // hidden constructor.

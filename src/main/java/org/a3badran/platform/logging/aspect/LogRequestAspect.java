@@ -1,11 +1,14 @@
 /**
  * Copyright (c) 2013 Ahmed Badran (a3badran). This content is released under the MIT License. See LICENCE.txt
  */
-package org.a3badran.platform.logging;
+package org.a3badran.platform.logging.aspect;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 
+import org.a3badran.platform.logging.RequestLogger;
+import org.a3badran.platform.logging.RequestScope;
+import org.a3badran.platform.logging.annotation.LogParam;
+import org.a3badran.platform.logging.annotation.LogRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Around;
@@ -21,7 +24,7 @@ import org.aspectj.lang.reflect.MethodSignature;
  */
 
 @Aspect
-public class LogRequestAspect extends LogAspect {
+public class LogRequestAspect extends BaseAspect {
 
     public LogRequestAspect() {
         // default empty constructor

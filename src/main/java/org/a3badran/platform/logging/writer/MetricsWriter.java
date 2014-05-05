@@ -1,13 +1,15 @@
 /**
  * Copyright (c) 2013 Ahmed Badran (a3badran). This content is released under the MIT License. See LICENCE.txt
  */
-package org.a3badran.platform.logging;
+package org.a3badran.platform.logging.writer;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.a3badran.platform.logging.RequestScope;
+import org.a3badran.platform.logging.writer.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;

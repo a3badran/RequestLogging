@@ -3,6 +3,8 @@
  */
 package org.a3badran.platform.logging;
 
+import org.a3badran.platform.logging.annotation.LogParam;
+import org.a3badran.platform.logging.annotation.LogRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

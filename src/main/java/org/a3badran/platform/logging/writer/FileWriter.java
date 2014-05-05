@@ -1,11 +1,13 @@
 /**
  * Copyright (c) 2013 Ahmed Badran (a3badran). This content is released under the MIT License. See LICENCE.txt
  */
-package org.a3badran.platform.logging;
+package org.a3badran.platform.logging.writer;
 
 import java.util.Date;
 import java.util.Map;
 
+import org.a3badran.platform.logging.RequestScope;
+import org.a3badran.platform.logging.writer.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -14,7 +16,7 @@ import com.google.common.base.Strings;
 /**
  * record request data to log
  */
-public class LogWriter implements Writer {
+public class FileWriter implements Writer {
     private static final Log log = LogFactory.getLog(Writer.LOGGER);
     private static final Object EOL = System.getProperty("line.separator");
 
