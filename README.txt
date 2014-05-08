@@ -1,16 +1,9 @@
 ==========================================
  Introduction
 ==========================================
-RequestLogging is a library that aims at providing an easy and non-intrusive way to log requests consistently.  
-In today's world of web services it is hard to troubelshoot by looking at normal (e.g. log4j) log files to 
-track requests and understand what happend when.  This library is meant to help with logging consistent data 
-per request including sub requests as one unit along with basic timing and profiling.  It works at a request 
-level (per thread).  It is not intended 
-for low level profiling, but rather for collecting metrics and data pertaining to a request at a high level.  
-For example, you will start a scope at the top HTTP servlet handler level, then add other scopes to capture 
-expensive operations (i.e. database calls, remote services calls, computationally expensive functions, etc).  
-This should help with understanding where time get spent during a request as well as capturing the type, params, 
-time and volume of requests your service gets.
+RequestLogging is a library that aims at providing an easy and non-intrusive way to log requests consistently. In today's world of web services it is hard to troubelshoot by looking at normal (e.g. log4j) log files to track requests and understand what happend when.  This library is meant to help with logging consistent data per request including sub requests as one unit along with basic timing and profiling.  It works at a request level (per thread).  It is not intended for low level profiling, but rather for collecting metrics and data pertaining to a request at a high level.  
+
+For example, you will start a scope at the top HTTP servlet handler level, then add other scopes to capture expensive operations (i.e. database calls, remote services calls, computationally expensive functions, etc). This should help with understanding where time get spent during a request as well as capturing the type, params, time and volume of requests your service gets.
 
 ==========================================
  Licence
@@ -27,6 +20,9 @@ All you need is to include the following dependency in your pom.xml
          <artifactId>request-logging</artifactId>
          <version>${a3badran.version}</version>
     </dependency>
+
+Latest version is 1.1.1  (git clone with tag request-logging-1.1.1)
+2.0 is in progress
 
 ==========================================
  Using
@@ -65,6 +61,7 @@ Alternativly you can use direct java code
          RequestLogger.endScope(scope);
      }
 
+
 Example Log
 -------------------------------------------
 The getCustomerById examples above will produce the following log (using default writer LogWriter)
@@ -77,10 +74,7 @@ The getCustomerById examples above will produce the following log (using default
     customerId: 1234567890
     Request: getCustomerById
 
-The example above shows the time when the method was called and when it returned.  How long it took 
-(in milliseconds).  As well as the customerId that was passed as param to the method.  SubRequests is
-empty since no methods (that are annotated with @LogRequest) are called within the scope of getCustomerById.
-Let us assume that getCustomerById calls a remote service via method named 
+The example above shows the time when the method was called and when it returned.  How long it took (in milliseconds).  As well as the customerId that was passed as param to the method.  SubRequests is empty since no methods (that are annotated with @LogRequest) are called within the scope of getCustomerById. Let us assume that getCustomerById calls a remote service via method named 
    
     @LogRequest("authenticate")
     public boolean authenticate() 
@@ -102,6 +96,14 @@ After getCustomerById has completed the following is an example of what the log 
 
 SubRequests captured both calls indicating that authenticate() took about 1.5 second and was called once.
 While db.getCustomer took 3 seconds and was also called once.
+
+You can also increment counters and add requstId
+
+    RequestLogger.incrementCounter("key", value);
+    RequestLogger.addRequestId();
+
+Using MetricsWriter will collects stats over random sample of the requests whih you then coud expose through an endpoint for some monitoring system to consume.
+
 
 ===========================================
  Logging with Log4j
