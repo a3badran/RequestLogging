@@ -10,5 +10,8 @@ import org.a3badran.platform.logging.RequestScope;
  */
 public interface Writer {
     public static final String LOGGER = "requestLogger";
+    public static final String THREAD_ID = "threadId";
+    public static final String REQUEST_ID = "requestId";
+
     public void write(RequestScope requestScope);
 }

@@ -21,7 +21,7 @@ import org.aspectj.lang.annotation.Aspect;
  */
 
 @Aspect
-public class LogClassAspect extends BaseAspect {
+public class LogClassAspect {
 
     public LogClassAspect() {
         // default empty constructor
@@ -45,8 +45,8 @@ public class LogClassAspect extends BaseAspect {
         try {
             return joinPoint.proceed();
         } catch (Throwable t) {
-            if (requestErrorHandler != null) {
-                requestErrorHandler.handleError(t);
+            if (RequestLogger.getRequestErrorHandler() != null) {
+                RequestLogger.getRequestErrorHandler().handleError(t);
             } else {
                 RequestLogger.addError(t.toString());
             }

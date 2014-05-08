@@ -5,9 +5,10 @@ package org.a3badran.platform.logging.writer;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.a3badran.platform.logging.RequestLogger;
 import org.a3badran.platform.logging.RequestScope;
-import org.a3badran.platform.logging.writer.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -16,27 +17,24 @@ import com.google.common.base.Strings;
 /**
  * record request data to log
  */
-public class FileWriter implements Writer {
+public class LogFileWriter implements Writer {
     private static final Log log = LogFactory.getLog(Writer.LOGGER);
     private static final Object EOL = System.getProperty("line.separator");
 
     @Override
     public void write(RequestScope requestScope) {
         if (log.isInfoEnabled()) {
+            String requestId = RequestLogger.MDC.get().get(Writer.REQUEST_ID);
+            String threadId = RequestLogger.MDC.get().get(Writer.THREAD_ID);
+
             // NOTE: time will be in JVM time zone
             StringBuilder buffer = new StringBuilder();
             buffer.append("----------------------------------------------" + EOL);
             buffer.append("StartTime: ").append(new Date(requestScope.getStartTime()).toString()).append(EOL);
             buffer.append("EndTime: ").append(new Date(requestScope.getEndTime()).toString()).append(EOL);
             buffer.append("Time (ms): ").append(requestScope.getEndTime() - requestScope.getStartTime()).append(EOL);
-            
-            if (!Strings.isNullOrEmpty(requestScope.getError())) {
-                buffer.append("Error: ").append(requestScope.getError()).append(EOL);
-            }
-
-            if (!Strings.isNullOrEmpty(requestScope.getWarninge())) {
-                buffer.append("Warning: ").append(requestScope.getWarninge()).append(EOL);
-            }
+            buffer.append("RequestID: ").append(requestId).append(EOL);
+            buffer.append("ThreadID: ").append(threadId).append(EOL);
 
             // write all sub scopes
             buffer.append("SubRequests: ");
@@ -45,8 +43,25 @@ public class FileWriter implements Writer {
                     RequestScope scope = subScope.getValue();
                     buffer.append(subScope.getKey());
                     buffer.append(" ").append(scope.getTotalTime());
-                    buffer.append("/").append(scope.getCount()).append(", ");
+                    buffer.append("/").append(scope.getCallCount()).append(", ");
                 }
+            }
+
+            // write all counters
+            buffer.append(EOL);
+            buffer.append("Counters: ");
+            if (requestScope.getCounters() != null) {
+                for (Map.Entry<String, AtomicLong> entry : requestScope.getCounters().entrySet()) {
+                    buffer.append(entry.getKey()).append("/").append(entry.getValue()).append(", ");
+                }
+            }
+
+            if (!Strings.isNullOrEmpty(requestScope.getError())) {
+                buffer.append(EOL).append("Error: ").append(requestScope.getError());
+            }
+
+            if (!Strings.isNullOrEmpty(requestScope.getWarninge())) {
+                buffer.append(EOL).append("Warning: ").append(requestScope.getWarninge());
             }
 
             // write all additional info

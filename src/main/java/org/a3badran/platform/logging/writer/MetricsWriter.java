@@ -35,17 +35,16 @@ public class MetricsWriter implements Writer {
 
     private static final Log log = LogFactory.getLog(Writer.LOGGER);
 
-    private static final Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private String appName = "app";
     private int sampleWindow = 100;
     private float sampleRate = 0.5f;
-    private boolean writeSubScopes = false;
+    private boolean recordSubscope = false;
     private final ConcurrentHashMap<String, AtomicLong> appTotalMetrics = new ConcurrentHashMap<String, AtomicLong>();
     private final ConcurrentHashMap<String, AtomicLong> scopeTotalMetrics = new ConcurrentHashMap<String, AtomicLong>();
     private final ConcurrentHashMap<String, DescriptiveStatistics> sampleMetrics = new ConcurrentHashMap<String, DescriptiveStatistics>();
+    private final ConcurrentHashMap<String, DescriptiveStatistics> sampleCounterMetrics = new ConcurrentHashMap<String, DescriptiveStatistics>();
     private final Random random = new Random(System.currentTimeMillis());
 
     //---------------------------------------------------------
@@ -64,12 +63,12 @@ public class MetricsWriter implements Writer {
     public void write(RequestScope scope) {
         // this method must not throw any exceptions
         try {
-            updateMetrics(scope, appName, scope.getEndTime() - scope.getStartTime(), 1);
+            updateMetrics(scope, appName, scope.getEndTime() - scope.getStartTime(), 1, true);
 
-            if (writeSubScopes && scope.getSubScopes() != null && !scope.getSubScopes().isEmpty() ) {
+            if (recordSubscope && scope.getSubScopes() != null && !scope.getSubScopes().isEmpty() ) {
                 for (Map.Entry<String, RequestScope> entry : scope.getSubScopes().entrySet()) {
                     RequestScope subScope = entry.getValue();
-                    updateMetrics(subScope, appName + "." + scope.getName(), subScope.getTotalTime(), subScope.getCount());
+                    updateMetrics(subScope, appName + "." + scope.getName(), subScope.getTotalTime(), subScope.getCallCount(), false);
                 }
             }
         } catch (RuntimeException e) {
@@ -104,14 +103,13 @@ public class MetricsWriter implements Writer {
      *      totalTime: 605
      *   }
      * ]
-     * @param name
      * @return metrics for the given name, if null or empty, it returns all metrics
      *
      */
     public Map<String, Map<String, Long>> getMetrics() {
         return getMetricsByName(null);
     }
-    
+
     public Map<String, Map<String, Long>> getMetricsByName(String name) {
         Map<String, Map<String, Long>> groupedMetrics = new HashMap<String, Map<String, Long>>();
         Map<String, Long> metrics = getAllMetrics();
@@ -145,12 +143,12 @@ public class MetricsWriter implements Writer {
     public Map<String, Long> getAppTotalMetrics() {
         Map<String,Long> map = Maps.newHashMap();
         for (Entry<String,AtomicLong> entry : appTotalMetrics.entrySet()) {
-               map.put(entry.getKey(), entry.getValue().longValue());
+            map.put(entry.getKey(), entry.getValue().longValue());
         }
 
         return map;
     }
-    
+
     public void resetTotalMetrics() {
         this.scopeTotalMetrics.clear();
         this.appTotalMetrics.clear();
@@ -173,14 +171,27 @@ public class MetricsWriter implements Writer {
         Map<String, Long> metrics = new HashMap<String, Long>();
         for (Entry<String, DescriptiveStatistics> entry : sampleMetrics.entrySet()) {
             // create a copy to reduce locking
+            String name = entry.getKey();
             DescriptiveStatistics stats = entry.getValue().copy();
-            metrics.put(entry.getKey() + ".sampleCount", (long) stats.getN());
-            metrics.put(entry.getKey() + ".max", (long) stats.getMax());
-            metrics.put(entry.getKey() + ".min", (long) stats.getMin());
-            metrics.put(entry.getKey() + ".avg", (long) stats.getMean());
-            metrics.put(entry.getKey() + ".50p", (long) stats.getPercentile(50));
-            metrics.put(entry.getKey() + ".90p", (long) stats.getPercentile(90));
-            metrics.put(entry.getKey() + ".99p", (long) stats.getPercentile(99));
+            metrics.put(name + ".sampleCount", (long) stats.getN());
+            metrics.put(name + ".max", (long) stats.getMax());
+            metrics.put(name + ".min", (long) stats.getMin());
+            metrics.put(name + ".avg", (long) stats.getMean());
+            metrics.put(name + ".50p", (long) stats.getPercentile(50));
+            metrics.put(name + ".90p", (long) stats.getPercentile(90));
+            metrics.put(name + ".99p", (long) stats.getPercentile(99));
+        }
+
+        for (Entry<String, DescriptiveStatistics> cEntry : sampleCounterMetrics.entrySet()) {
+            // create a copy to reduce locking
+            String cName = cEntry.getKey();
+            DescriptiveStatistics cStats = cEntry.getValue().copy();
+            metrics.put(cName + ".max", (long) cStats.getMax());
+            metrics.put(cName + ".min", (long) cStats.getMin());
+            metrics.put(cName + ".avg", (long) cStats.getMean());
+            metrics.put(cName + ".50p", (long) cStats.getPercentile(50));
+            metrics.put(cName + ".90p", (long) cStats.getPercentile(90));
+            metrics.put(cName + ".99p", (long) cStats.getPercentile(99));
         }
 
         for (Entry<String, AtomicLong> entry : scopeTotalMetrics.entrySet()) {
@@ -193,8 +204,8 @@ public class MetricsWriter implements Writer {
 
         return metrics;
     }
-    
-    private void updateMetrics(RequestScope scope, String prefixName, long tt, long count) {
+
+    private void updateMetrics(RequestScope scope, String prefixName, long tt, long count, boolean updateCounters) {
         String name = Strings.isNullOrEmpty(prefixName) ? scope.getName() : prefixName + "." + scope.getName();
 
         String metricTotalCount = name + ".totalCount";
@@ -232,18 +243,28 @@ public class MetricsWriter implements Writer {
         if (random.nextFloat() <= sampleRate) {
             sampleMetrics.putIfAbsent(name, new SynchronizedDescriptiveStatistics(sampleWindow));
             sampleMetrics.get(name).addValue(tt);
+
+            // sample counters
+            if (updateCounters == true && scope.getCounters() != null) {
+                for (Map.Entry<String, AtomicLong> entry : scope.getCounters().entrySet()) {
+                    String counterName = String.format("%s.%s", name, entry.getKey());
+                    sampleCounterMetrics.putIfAbsent(counterName, new SynchronizedDescriptiveStatistics(sampleWindow));
+                    sampleCounterMetrics.get(counterName).addValue(entry.getValue().doubleValue());
+                }
+            }
         }
+
     }
 
     //---------------------------------------------------------
     // IoC
     //---------------------------------------------------------
 
-    public String getServiceName() {
+    public String getAppName() {
         return appName;
     }
 
-    public void setServiceName(String serviceName) {
+    public void setAppName(String serviceName) {
         this.appName = serviceName;
     }
 
@@ -264,11 +285,10 @@ public class MetricsWriter implements Writer {
     }
 
     public boolean isRecordSubScopes() {
-        return writeSubScopes;
+        return recordSubscope;
     }
 
     public void setRecordSubScopes(boolean recordSubScopes) {
-        this.writeSubScopes = recordSubScopes;
+        this.recordSubscope = recordSubScopes;
     }
-
 }

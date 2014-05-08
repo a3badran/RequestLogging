@@ -24,7 +24,7 @@ import org.aspectj.lang.reflect.MethodSignature;
  */
 
 @Aspect
-public class LogRequestAspect extends BaseAspect {
+public class LogRequestAspect {
 
     public LogRequestAspect() {
         // default empty constructor
@@ -68,8 +68,8 @@ public class LogRequestAspect extends BaseAspect {
             // TODO: configure the ability to bypass exception prior to method calling.
             return joinPoint.proceed();
         } catch (Throwable t) {
-            if (requestErrorHandler != null) {
-                requestErrorHandler.handleError(t);
+            if (RequestLogger.getRequestErrorHandler() != null) {
+                RequestLogger.getRequestErrorHandler().handleError(t);
             } else {
                 RequestLogger.addError(t.toString());
             }

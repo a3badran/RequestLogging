@@ -18,14 +18,14 @@ public class TestSpringConfig
     @Bean
     public LogRequestAspect logRequestAspect() {
         LogRequestAspect aspect = new LogRequestAspect();
-        aspect.setRequestErrorHandler(new ErrorHandler());
+        RequestLogger.setRequestErrorHandler(new ErrorHandler());
         return aspect;
     }
 
     @Bean
     public LogClassAspect logClassAspect() {
         LogClassAspect aspect = new LogClassAspect();
-        aspect.setRequestErrorHandler(new ErrorHandler());
+        RequestLogger.setRequestErrorHandler(new ErrorHandler());
         return aspect;
     }
 }

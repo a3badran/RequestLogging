@@ -4,13 +4,12 @@
 package org.a3badran.platform.logging;
 
 import com.google.common.collect.Sets;
-import org.a3badran.platform.logging.writer.FileWriter;
+import org.a3badran.platform.logging.writer.LogFileWriter;
 import org.a3badran.platform.logging.writer.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * RequestLogger is meant to help with logging consistent timing data
@@ -25,10 +24,12 @@ import java.util.Collections;
  *
  */
 public class RequestLogger {
-    private static final Log log = LogFactory.getLog("request");
+    private static final Log log = LogFactory.getLog(Writer.LOGGER);
     private static final Object EOL = System.getProperty("line.separator");
-    private static ThreadLocal<RequestScope> threadLocal = new ThreadLocal<RequestScope>();
-    private static final Collection<Writer> writers = Sets.newHashSet((Writer) new FileWriter());
+    private static ThreadLocal<RequestScope> threadLocal = new ThreadLocal<>();
+    private static Collection<Writer> writers = Sets.newHashSet((Writer) new LogFileWriter());
+    private static RequestErrorHandler errorHandler;
+    public static ThreadLocal<Map<String, String>> MDC = new ThreadLocal<>();
 
     private RequestLogger() {
         // hidden constructor.
@@ -38,8 +39,14 @@ public class RequestLogger {
         RequestScope topScope = threadLocal.get();
         if (topScope == null) {
             topScope =  new RequestScope(name);
-            topScope.incrementCount();
+            topScope.incrementCallCount();
             threadLocal.set(topScope);
+
+            if (MDC.get() == null || MDC.get().get(Writer.THREAD_ID) == null) {
+                MDC.set(new HashMap<String, String>());
+                MDC.get().put(Writer.THREAD_ID, String.valueOf(Thread.currentThread().getId()));
+            }
+
             return topScope;
         }
         else {
@@ -61,6 +68,7 @@ public class RequestLogger {
             topScope.endScope();
             topScope.incrementTotalTime();
             threadLocal.set(null);
+
             for(Writer writer : writers) {
                 writer.write(topScope);
             }
@@ -74,27 +82,58 @@ public class RequestLogger {
     public static void renameTopScope(String newName) {
         RequestScope topScope = threadLocal.get();
         if (topScope == null) {
-            log.error("[ERROR] no scope defined to rename [" + newName + "]" + EOL);
+            log.error(String.format("[ERROR] no scope defined to rename [%s]%s", newName, EOL));
         }
         else {
             topScope.setName(newName);
         }
     }
 
+    public static void incrementCounter(String key, long value) {
+        RequestScope topScope = threadLocal.get();
+        if (topScope == null) {
+            log.error(String.format("[ERROR] can't increment counter without a scope [%s:%s]%s", key, value, EOL));
+        }
+        else {
+            topScope.incrementCounter(key, value);
+        }
+    }
+
     public static void addInfo(String key, String value) {
         RequestScope topScope = threadLocal.get();
         if (topScope == null) {
-            log.error("[ERROR] can't add info without a scope [" + key + ": " + value + "]" + EOL);
+            log.error(String.format("[ERROR] can't add info without a scope [%s:%s]%s", key, value, EOL));
         }
         else {
             topScope.addInfo(key, value);
         }
     }
 
+    public static String addRequestId() {
+        String guid = UUID.randomUUID().toString();
+        addRequestId(guid);
+        return guid;
+    }
+
+    public static void addRequestId(String guid) {
+        if (MDC.get() == null) {
+            MDC.set(new HashMap<String, String>());
+        }
+        MDC.get().put(Writer.REQUEST_ID, guid);
+    }
+
+    public static String getRequestId() {
+        if (MDC.get() == null) {
+            return null;
+        }
+
+        return MDC.get().get(Writer.REQUEST_ID);
+    }
+
     public static void addError(String value) {
         RequestScope topScope = threadLocal.get();
         if (topScope == null) {
-            log.error("[ERROR] can't add error without a scope [" + value + "]" + EOL);
+            log.error(String.format("[ERROR] can't add error without a scope [%s]%s", value, EOL));
         }
         else {
             topScope.addError(value);
@@ -104,7 +143,7 @@ public class RequestLogger {
     public static void addWarning(String value) {
         RequestScope topScope = threadLocal.get();
         if (topScope == null) {
-            log.error("[ERROR] can't add warning without a scope [" + value + "]" + EOL);
+            log.error(String.format("[ERROR] can't add warning without a scope [%s]%s", value, EOL));
         }
         else {
             topScope.addWarning(value);
@@ -114,6 +153,14 @@ public class RequestLogger {
     public static void setWriters(Collection<Writer> writers) {
         RequestLogger.writers.clear();
         RequestLogger.writers.addAll(writers);
+    }
+
+    public static void setRequestErrorHandler(RequestErrorHandler requestErrorHandler) {
+        RequestLogger.errorHandler = requestErrorHandler;
+    }
+
+    public static RequestErrorHandler getRequestErrorHandler() {
+        return RequestLogger.errorHandler;
     }
 
     public static Collection<Writer> getWriters() {

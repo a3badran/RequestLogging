@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,33 +29,34 @@ public class RequestScope {
 
     /* start time of the request */
     private long startTime;
-    
+
     /* end time of the request */
     private long endTime;
 
     /* Total time elapsed between start and end of a scope */
     private long totalTime;
 
-    /* Total count of how many times this scope is called */
-    private long count;
+    /* Total call count of how many times this scope is called */
+    private long callCount;
 
     /* Using LinkedHashMap to maintain key insertion order - helps to visualize call order */
     private Map<String, RequestScope> subScopes;
 
+    /* Maintain counters */
+    private Map<String, AtomicLong> counters;
+
     /* Maintain additional info within a scope */
     private List<String> info;
-    
+
     /* Error message */
     private String error;
 
     /* Warning message*/
     private String warning;
-    
+
     /* to print object in JSON format */
-    private static final Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
-    
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
     /**
      * package protected constructor
      * @param scopeName
@@ -84,8 +86,8 @@ public class RequestScope {
         return this.endTime;
     }
 
-    public long getCount() {
-        return this.count;
+    public long getCallCount() {
+        return this.callCount;
     }
 
     public List<String> getInfo() {
@@ -108,16 +110,29 @@ public class RequestScope {
         this.warning = warningMessage;
     }
 
-    void incrementCount() {
-        this.count++;
+    void incrementCallCount() {
+        this.callCount++;
+    }
+
+    void incrementCounter(String key, long value) {
+        if (this.counters == null) {
+            this.counters = new LinkedHashMap<String, AtomicLong>();
+        }
+
+        if (this.counters.containsKey(key)) {
+            this.counters.get(key).addAndGet(value);
+        }
+        else {
+            this.counters.put(key, new AtomicLong(value));
+        }
+    }
+
+    public Map<String, AtomicLong> getCounters() {
+        return this.counters;
     }
 
     public long getTotalTime() {
         return this.totalTime;
-    }
-
-    public Map<String, RequestScope> getSubScopes() {
-        return subScopes;
     }
 
     void incrementTotalTime() {
@@ -131,9 +146,13 @@ public class RequestScope {
         this.info.add(key + ": " + value);
     }
 
+    public Map<String, RequestScope> getSubScopes() {
+        return subScopes;
+    }
+
     /**
      * Add sub scopes. Track all calls to the same scope
-     * to get call count and average time.
+     * to get call callCount and average time.
      * @param scope
      */
     void addSubScope(RequestScope scope) {
@@ -141,7 +160,7 @@ public class RequestScope {
             this.subScopes = new LinkedHashMap<String, RequestScope>();
         }
 
-        scope.incrementCount();
+        scope.incrementCallCount();
         scope.incrementTotalTime();
 
         if (!this.subScopes.containsKey(scope.getName())) {
