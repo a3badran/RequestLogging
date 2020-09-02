@@ -1,18 +1,16 @@
-==========================================
- Introduction
-==========================================
+
+ # Introduction
+
 RequestLogging is a library that aims at providing an easy and non-intrusive way to log requests consistently. In today's world of web services it is hard to troubelshoot by looking at normal (e.g. log4j) log files to track requests and understand what happend when.  This library is meant to help with logging consistent data per request including sub requests as one unit along with basic timing and profiling.  It works at a request level (per thread).  It is not intended for low level profiling, but rather for collecting metrics and data pertaining to a request at a high level.  
 
 For example, you will start a scope at the top HTTP servlet handler level, then add other scopes to capture expensive operations (i.e. database calls, remote services calls, computationally expensive functions, etc). This should help with understanding where time get spent during a request as well as capturing the type, params, time and volume of requests your service gets.
 
-==========================================
- Licence
-==========================================
+# Licence
+
 See LICENCE.txt
 
-==========================================
- Maven Use
-==========================================
+# Maven Use
+
 All you need is to include the following dependency in your pom.xml
 
     <dependency>
@@ -24,15 +22,14 @@ All you need is to include the following dependency in your pom.xml
 Latest version is 1.1.1  (git clone with tag request-logging-1.1.1)
 2.0 is in progress
 
-==========================================
- Using
-==========================================
+ # Usage
 There are two ways to use the library.
 1.  Through aspect programing
 2.  Through direct java method calls
 
-Aspect Programing
-------------------------------------------
+
+## Aspect Programing
+
 Initialize LogAspect within your AOP framework.  Then add @LogRequest annotation to methods you want to log.
 
   @LogRequest("createCustomerOrder")
@@ -45,8 +42,8 @@ You could also use @LogParam annotation to include the values of some params int
 
 You could also annotate a class with @LogClassRequests to log all public methods in that class.
  
-Java Programing
--------------------------------------------
+## Java Programing
+
 Alternativly you can use direct java code
 
   public Customer getCustomerById(string customerId) {
@@ -62,8 +59,8 @@ Alternativly you can use direct java code
      }
 
 
-Example Log
--------------------------------------------
+# Example Log
+
 The getCustomerById examples above will produce the following log (using default writer LogWriter)
 
     ----------------------------------------------
@@ -105,9 +102,8 @@ You can also increment counters and add requstId
 Using MetricsWriter will collects stats over random sample of the requests whih you then coud expose through an endpoint for some monitoring system to consume.
 
 
-===========================================
- Logging with Log4j
-===========================================
+ # Logging with Log4j
+
 The default writer is LogWriter, which uses common-logging.  To get log4j to work, you simply 
 could add the following to your log4j.properties file
 
